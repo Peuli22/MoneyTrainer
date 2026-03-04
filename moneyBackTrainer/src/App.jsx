@@ -65,15 +65,25 @@ function App() {
       {/* Kasa - Výběr bankovek a mincí */}
       <div className="w-full max-w-2xl bg-slate-800 rounded-2xl shadow-xl p-6 mb-6">
         <h2 className="text-white text-lg font-bold mb-4">Kasa (Klikni pro výběr)</h2>
-        <div className="flex flex-wrap gap-3 justify-center">
+        <div className="flex flex-wrap gap-4 justify-center items-center">
           {dostupneBankovkyAMince.map((hodnota) => (
             <button
               key={hodnota}
               onClick={() => pridejPeniz(hodnota)}
-              // Zde pak tlačítko nahradíš značkou <img>
-              className="bg-slate-200 hover:bg-white text-slate-800 font-bold py-3 px-4 rounded-lg shadow transition-colors text-lg min-w-[60px]"
+              // Tlačítko už nemá šedé pozadí, jen se při najetí myší trochu zvětší
+              className="hover:scale-110 transition-transform duration-200 focus:outline-none"
             >
-              {hodnota}
+              {/* Tady voláme obrázek podle jeho hodnoty */}
+              <img 
+                src={`/penize/${hodnota}.jpg`} 
+                alt={`${hodnota} Kč`} 
+                // Zde použijeme zpětné uvozovky (backticks) pro vložení podmínky
+                className={`object-contain drop-shadow-lg ${
+                  hodnota >= 100 
+                    ? "w-36 rounded-sm" // Bankovky budou širší (144px)
+                    : "w-16 h-16 rounded-full" // Mince budou menší a zaoblí se jim bílé rohy!
+                }`} 
+              />
             </button>
           ))}
         </div>
@@ -86,12 +96,19 @@ function App() {
           <span className="text-2xl font-black text-blue-600">{celkemVydano} Kč</span>
         </div>
         
-        <div className="flex flex-wrap gap-2 min-h-[60px] p-2 bg-slate-50 rounded-lg mb-6">
+        <div className="flex flex-wrap gap-2 min-h-[80px] p-4 bg-slate-50 rounded-lg mb-6 items-center border border-slate-200">
           {vydanePenize.length === 0 && <span className="text-slate-400 italic">Zatím jsi nevybral žádné peníze...</span>}
           {vydanePenize.map((hodnota, index) => (
-             <div key={index} className="bg-blue-100 text-blue-800 font-bold py-2 px-3 rounded shadow-sm">
-               {hodnota}
-             </div>
+             <img 
+               key={index} 
+               src={`/penize/${hodnota}.jpg`} 
+               alt={`${hodnota} Kč`} 
+               className={`object-contain drop-shadow-sm hover:-translate-y-1 transition-transform ${
+                 hodnota >= 100 
+                   ? "w-24 rounded-sm" // Bankovky na tácu
+                   : "w-15 h-15 rounded-full" // Mince na tácu
+               }`}
+             />
           ))}
         </div>
 
