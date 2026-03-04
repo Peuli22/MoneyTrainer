@@ -6,18 +6,51 @@ function App() {
 
   const [vydanePenize, setVydanePenize] = useState([]);
 
+  const [streak, setStreak] = useState(0);
+  const [nejvyssiStreak, setNejvyssiStreak] = useState(0);
+
   const dostupneBankovkyAMince = [2000, 1000, 500, 200, 100, 50, 20, 10, 5, 2, 1];
 
   const vygenerovatZakaznika = () => {
-    const novaCena = Math.floor(Math.random() * 950) + 50; // Generuje náhodnou cenu mezi 50 a 1000
+    const novaCena = Math.floor(Math.random() * 950) + 50; 
     setCenaNakupu(novaCena);
     
-    const bankovky = [100, 200, 500, 1000];
+    // Nová logika: Vytvoříme rozumnější možnosti platby
+    const moznostiPlatby = [];
+    
+    // 1. Nejbližší padesátka (např. pro nákup 246 to vygeneruje 250)
+    const dalsiPadesatka = Math.ceil(novaCena / 50) * 50;
+    if (dalsiPadesatka > novaCena) moznostiPlatby.push(dalsiPadesatka);
+    
+    // 2. Nejbližší stovka (např. pro nákup 246 to vygeneruje 300)
+    const dalsiStovka = Math.ceil(novaCena / 100) * 100;
+    if (dalsiStovka > novaCena && dalsiStovka !== dalsiPadesatka) moznostiPlatby.push(dalsiStovka);
 
-    const vhodneBankovky = bankovky.filter(bankovka => bankovka >= novaCena); // Filtruje bankovky, které jsou větší nebo rovny ceně nákupu
-    const nahodnaBankovka = vhodneBankovky[Math.floor(Math.random() * vhodneBankovky.length)]; // Náhodně vybere jednu z vhodných bankovek
-    setPlatbaZakaznika(nahodnaBankovka);
-    setVydanePenize([]); // Resetuje vydané peníze pro nového zákazníka
+    // 3. Velké bankovky
+    const bankovky = [200, 500, 1000, 2000];
+    const vhodneBankovky = bankovky.filter(b => b > novaCena);
+    moznostiPlatby.push(...vhodneBankovky);
+
+    // Vybereme náhodný základ (např. 300, 500, 1000)
+    let nahodnaPlatba = moznostiPlatby[Math.floor(Math.random() * moznostiPlatby.length)]; 
+    
+    // 4. Přihazování drobných
+    if (Math.random() > 0.6) {
+      const zbytekStovky = novaCena % 100; // např. 46
+      const zbytekDesitky = novaCena % 10; // např. 6
+
+      // OMEZENÍ: Zákazník bude hledat drobné jen když mu vracíš do 500 Kč, ne když platí dvoutisícovkou.
+      if (nahodnaPlatba - novaCena <= 500) {
+        if (Math.random() > 0.5 && zbytekStovky > 0) {
+          nahodnaPlatba += zbytekStovky; // např. platí 346
+        } else if (zbytekDesitky > 0) {
+          nahodnaPlatba += zbytekDesitky; // např. platí 256
+        }
+      }
+    }
+    
+    setPlatbaZakaznika(nahodnaPlatba);
+    setVydanePenize([]); 
   }
 
   // useEffect zajistí, že se funkce spustí hned při prvním načtení stránky
@@ -37,21 +70,47 @@ function App() {
 
   const zkontrolovat = () => {
     const spravneVraceno = platbaZakaznika - cenaNakupu;
+
     if (celkemVydano === spravneVraceno) {
       alert('Správně! Zákazník dostal přesně zpět.');
+      setStreak(streak + 1);
+      if (streak + 1 > nejvyssiStreak) {
+        setNejvyssiStreak(streak + 1);
+      }
       vygenerovatZakaznika();
     } else {
       alert(`Špatně! Zákazník měl dostat ${spravneVraceno} Kč, ale dostal ${celkemVydano} Kč.`);
+      setStreak(0);
       zrusitVydane();
     }
   }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col items-center py-10 font-sans px-4">
-      <h1 className="text-4xl font-extrabold text-slate-800 mb-8">Pokladní Trenažér</h1>
+
+      {/* NOVÉ: Hlavička se Streakem */}
+      <div className="w-full max-w-2xl flex justify-between items-end mb-8">
+        <h1 className="text-4xl font-extrabold text-slate-800">Pokladní Trenažér</h1>
+        <div className="text-right">
+          <p className="text-sm text-slate-500 font-bold uppercase tracking-wider">Tvůj Streak</p>
+          <p className="text-3xl font-black text-orange-500 flex items-center gap-1 justify-end">
+            {streak} <span className="text-2xl">🔥</span>
+          </p>
+          {nejvyssiStreak > 0 && (
+            <p className="text-xs text-slate-400 mt-1">Rekord: {nejvyssiStreak}</p>
+          )}
+        </div>
+      </div>
       
       {/* Informace o nákupu */}
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 mb-6">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 mb-6 relative overflow-hidden">
+        {/* Pokud zákazník dal drobné (platba nekončí nulou), ukážeme malou nápovědu */}
+        {platbaZakaznika % 100 !== 0 && (
+          <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-bl-lg">
+            Zákazník přihodil drobné!
+          </div>
+        )}
+
         <div className="flex justify-between items-center text-xl mb-4">
           <span className="text-slate-500 font-medium">Cena nákupu:</span>
           <span className="font-bold text-red-500">{cenaNakupu} Kč</span>
@@ -70,18 +129,13 @@ function App() {
             <button
               key={hodnota}
               onClick={() => pridejPeniz(hodnota)}
-              // Tlačítko už nemá šedé pozadí, jen se při najetí myší trochu zvětší
               className="hover:scale-110 transition-transform duration-200 focus:outline-none"
             >
-              {/* Tady voláme obrázek podle jeho hodnoty */}
               <img 
                 src={`/penize/${hodnota}.jpg`} 
                 alt={`${hodnota} Kč`} 
-                // Zde použijeme zpětné uvozovky (backticks) pro vložení podmínky
                 className={`object-contain drop-shadow-lg ${
-                  hodnota >= 100 
-                    ? "w-36 rounded-sm" // Bankovky budou širší (144px)
-                    : "w-16 h-16 rounded-full" // Mince budou menší a zaoblí se jim bílé rohy!
+                  hodnota >= 100 ? "w-32 rounded-sm" : "w-16 h-16 rounded-full"
                 }`} 
               />
             </button>
@@ -104,9 +158,7 @@ function App() {
                src={`/penize/${hodnota}.jpg`} 
                alt={`${hodnota} Kč`} 
                className={`object-contain drop-shadow-sm hover:-translate-y-1 transition-transform ${
-                 hodnota >= 100 
-                   ? "w-24 rounded-sm" // Bankovky na tácu
-                   : "w-15 h-15 rounded-full" // Mince na tácu
+                 hodnota >= 100 ? "w-20 rounded-sm" : "w-10 h-10 rounded-full"
                }`}
              />
           ))}
