@@ -9,10 +9,17 @@ function App() {
   const [streak, setStreak] = useState(0);
   const [nejvyssiStreak, setNejvyssiStreak] = useState(0);
 
+  const [dohazovaciMod, setDohazovaciMod] = useState(false);
+
   const dostupneBankovkyAMince = [2000, 1000, 500, 200, 100, 50, 20, 10, 5, 2, 1];
 
-  const vygenerovatZakaznika = () => {
-    const novaCena = Math.floor(Math.random() * 950) + 50; 
+  const vygenerovatZakaznika = (isModZapnuty = dohazovaciMod) => {
+    let novaCena;
+
+    do {
+      novaCena = Math.floor(Math.random() * 950) + 50; 
+    } while (Math.abs(novaCena - cenaNakupu) < 50);
+
     setCenaNakupu(novaCena);
     
     // Nová logika: Vytvoříme rozumnější možnosti platby
@@ -34,17 +41,23 @@ function App() {
     // Vybereme náhodný základ (např. 300, 500, 1000)
     let nahodnaPlatba = moznostiPlatby[Math.floor(Math.random() * moznostiPlatby.length)]; 
     
-    // 4. Přihazování drobných
-    if (Math.random() > 0.6) {
-      const zbytekStovky = novaCena % 100; // např. 46
-      const zbytekDesitky = novaCena % 10; // např. 6
+    const zbytekStovky = novaCena % 100; 
+    const zbytekDesitky = novaCena % 10; 
 
-      // OMEZENÍ: Zákazník bude hledat drobné jen když mu vracíš do 500 Kč, ne když platí dvoutisícovkou.
-      if (nahodnaPlatba - novaCena <= 500) {
-        if (Math.random() > 0.5 && zbytekStovky > 0) {
-          nahodnaPlatba += zbytekStovky; // např. platí 346
+    // Pokud je mód zapnutý, dohazuje VŽDY (pokud to jde). Jinak jen občas (40% šance).
+    const chceDohazovat = isModZapnuty || Math.random() > 0.6; 
+
+    // Musí mít vůbec co dohazovat (cena nesmí končit na 00)
+    if (chceDohazovat && (zbytekStovky > 0 || zbytekDesitky > 0)) {
+      
+      if (isModZapnuty || nahodnaPlatba - novaCena <= 500) {
+        
+        if (zbytekStovky > 0 && zbytekDesitky > 0) {
+          nahodnaPlatba += (Math.random() > 0.5) ? zbytekStovky : zbytekDesitky;
+        } else if (zbytekStovky > 0) {
+          nahodnaPlatba += zbytekStovky; 
         } else if (zbytekDesitky > 0) {
-          nahodnaPlatba += zbytekDesitky; // např. platí 256
+          nahodnaPlatba += zbytekDesitky; 
         }
       }
     }
@@ -65,6 +78,13 @@ function App() {
   const zrusitVydane = () => {
     setVydanePenize([]);
   }
+
+  const toggleMod = () => {
+    const novyStav = !dohazovaciMod;
+    setDohazovaciMod(novyStav);
+    setStreak(0); // Resetneme streak, protože se mění pravidla hry
+    vygenerovatZakaznika(novyStav); // Rovnou hodíme nového zákazníka
+  };
 
   const celkemVydano = vydanePenize.reduce((soucet, hodnota) => soucet + hodnota, 0);
 
@@ -91,6 +111,19 @@ function App() {
       {/* NOVÉ: Hlavička se Streakem */}
       <div className="w-full max-w-2xl flex justify-between items-end mb-8">
         <h1 className="text-4xl font-extrabold text-slate-800">Pokladní Trenažér</h1>
+        {/* Tlačítko pro Trénink dohazování */}
+        <div className="w-full max-w-2xl flex justify-start mb-4">
+          <button
+            onClick={toggleMod}
+            className={`text-sm font-bold py-2 px-4 rounded-full transition-colors duration-300 ${
+              dohazovaciMod
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-slate-200 text-slate-500 hover:bg-slate-300'
+            }`}
+          >
+            {dohazovaciMod ? '🧠 Trénink dohazování: ZAPNUTO' : 'Trénink dohazování: VYPNUTO'}
+          </button>
+        </div>
         <div className="text-right">
           <p className="text-sm text-slate-500 font-bold uppercase tracking-wider">Tvůj Streak</p>
           <p className="text-3xl font-black text-orange-500 flex items-center gap-1 justify-end">
@@ -178,10 +211,9 @@ function App() {
             Vrátit zákazníkovi
           </button>
         </div>
-
         <div className="mt-6">
           <button 
-            onClick={vygenerovatZakaznika}
+            onClick={() => vygenerovatZakaznika()}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors text-lg shadow-md"
           >
             Další zákazník
