@@ -26,7 +26,6 @@ Webová aplikace pro trénink počítání peněz na pokladně. Generuje náhodn
 
 ```bash
 git clone https://github.com/peuli22/moneytrainer.git
-cd moneytrainer/MoneyTrainer-main/moneyBackTrainer
 npm install
 npm run dev
 ```
