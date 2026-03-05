@@ -1,16 +1,34 @@
-# React + Vite
+# Pokladní Trenažér
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Webová aplikace pro trénink počítání peněz na pokladně. Generuje náhodné částky nákupů a plateb, pomáhá zrychlit práci s hotovostí.
 
-Currently, two official plugins are available:
+## Live Demo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**[https://money-trainer-two.vercel.app/](https://money-trainer-two.vercel.app/)**
 
-## React Compiler
+![Pokladní Trenažér Screenshot](public/screenshots/app-preview.png)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Funkce
 
-## Expanding the ESLint configuration
+- **Simulace nákupů** - Náhodné částky s realistickými platbami
+- **Hard mód** - Zákazník "přihazuje" drobné k velké bankovce pro kulatou částku (např. nákup 246 Kč → platba 1046 Kč → vrácení 800 Kč)
+- **Streak systém** - Počítání správných odpovědí v řadě, sledování osobního rekordu
+- **Interaktivní UI** - Vizuální reprezentace českých mincí a bankovek, responzivní design
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech Stack
+
+- [React](https://react.dev/) - UI knihovna
+- [Vite](https://vitejs.dev/) - Build tool
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- JavaScript (ES6+)
+
+## Instalace
+
+```bash
+git clone https://github.com/peuli22/moneytrainer.git
+cd moneytrainer/MoneyTrainer-main/moneyBackTrainer
+npm install
+npm run dev
+```
+
+Aplikace běží na `http://localhost:5173/`
